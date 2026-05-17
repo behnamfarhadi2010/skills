@@ -4,6 +4,181 @@ These are not rules. They're memorised exceptions where Persian's standard ortho
 
 The skill handles these by either marking them in the text or warning the user that the engine may need help.
 
+> **Read this first.** The two highest-impact failure classes are **(a) closed consonant-cluster monosyllables** (`کفش`, `چتر`, `قفل`, `شکل` …) where the engine inserts a phantom vowel mid-cluster, and **(b) ambiguous short-vowel words** (`شِن` vs `شَن`, `مِزه` vs `مَزه`) where the engine guesses the wrong vowel. These two classes are far more common than the واو معدوله issue and are the #1 source of "obvious" TTS mispronunciation in Persian. **Always diacritize words from sections 1A and 1B below — this is a `[Rule]`, not a heuristic.**
+
+---
+
+## 1A. Closed consonant-cluster monosyllables — diacritize them every time `[Rule]`
+
+When a Persian word is a single syllable ending in a two-consonant cluster (CVCC), the engine often inserts a **phantom epenthetic vowel** between the two final consonants to make it pronounceable. Persian writes the short vowel implicit, so the engine has no way to know whether the vowel is `a`, `e`, or `o` — and it usually guesses wrong.
+
+**Real failure examples (from production):**
+
+| Bare written | What the engine read | What was correct |
+|---|---|---|
+| `کفش` | `kefesh` (extra `e` inserted) | `kafsh` |
+| `چتر` | `chetre` (treated as `chetr` + ezafe) | `chatr` |
+| `قفل` | `qofel` | `qofl` |
+| `شکل` | `shekel` | `shekl` |
+| `قبر` | `qabar` | `qabr` |
+| `نبض` | `nabaz` | `nabz` |
+| `مشت` | `moshat` | `mosht` |
+| `پست` | `posat` | `post` |
+
+**Fix:** add the explicit short-vowel diacritic on the first consonant of the cluster.
+
+| Bare | Diacritized | Vowel | Reading |
+|---|---|---|---|
+| کفش | `کَفش` | fatha | kafsh |
+| چتر | `چَتر` | fatha | chatr |
+| قبر | `قَبر` | fatha | qabr |
+| شکل | `شِکل` | kasra | shekl |
+| نبض | `نَبض` | fatha | nabz |
+| قفل | `قُفل` | damma | qofl |
+| مشت | `مُشت` | damma | mosht |
+| پست | `پُست` | damma | post |
+| نطق | `نُطق` | damma | notq |
+| خشم | `خَشم` | fatha | khashm |
+| دست | `دَست` | fatha | dast |
+| تخت | `تَخت` | fatha | takht |
+| سخت | `سَخت` | fatha | sakht |
+| مشک | `مُشک` | damma | moshk |
+| شخص | `شَخص` | fatha | shakhs |
+| نفس | `نَفَس` | fatha+fatha | nafas |
+| شغل | `شُغل` | damma | shoghl |
+| قدر | `قَدر` | fatha | qadr |
+| قلب | `قَلب` | fatha | qalb |
+| فکر | `فِکر` | kasra | fekr |
+| ذکر | `ذِکر` | kasra | zekr |
+| صبر | `صَبر` | fatha | sabr |
+| عمق | `عُمق` | damma | omq |
+| سکر | `سُکر` | damma | sokr |
+| لطف | `لُطف` | damma | lotf |
+| عشق | `عِشق` | kasra | eshq |
+| لمس | `لَمس` | fatha | lams |
+| حبس | `حَبس` | fatha | habs |
+| مژه | `مِژه` | kasra | mezhe |
+| پخش | `پَخش` | fatha | pakhsh |
+| خشک | `خُشک` | damma | khoshk |
+
+**Scan rule for the preprocessor**: any time a single-syllable Persian word has the shape `CC...C` (consonant + consonant cluster at the end) and is **not** in the safe list below, add the diacritic. Don't wait for the user to flag it.
+
+**Safe list (single-syllable cluster words that almost always read correctly):**
+
+`اسم` (esm), `عمل` (amal — 2 syllables), `قلم` (qalam — 2 syllables). When in doubt, mark anyway — over-marking is harmless; under-marking is the failure mode.
+
+---
+
+## 1B. Ambiguous short-vowel monosyllables — disambiguate every time `[Rule]`
+
+These are single-syllable words where the short vowel could plausibly be `a`, `e`, or `o`, and the meaning depends on which one. The engine guesses the most-frequent reading, which is often wrong for the user's context.
+
+**Real failure examples:**
+
+| Bare | Engine read | User meant |
+|---|---|---|
+| `شن` | `shan` | `shen` (sand) |
+| `لنگ` (in `لنگم`) | `lang` (lame) | `leng` (pair, leg) |
+
+**Fix:** always add the explicit short vowel.
+
+| Word | Diacritized | Meaning |
+|---|---|---|
+| شن | `شِن` | sand |
+| شن (other) | `شَن` | (less common) |
+| لنگ | `لِنگ` | leg, half of a pair |
+| لنگ | `لَنگ` | lame |
+| سر | `سَر` | head |
+| سر | `سِرّ` | secret (note: tashdid on r) |
+| کرم | `کِرم` | worm |
+| کرم | `کِرِم` | cream (with extra kasra) |
+| کرم | `کَرَم` | generosity |
+| مرد | `مَرد` | man |
+| مرد | `مُرد` | died (past verb) |
+| مزه | `مَزه` | taste |
+| مزه | `مِزه` | (regional) |
+| شکر | `شِکَر` | sugar |
+| شکر | `شُکر` | thanks |
+| پر | `پَر` | feather |
+| پر | `پُر` | full |
+| نم | `نَم` | moisture |
+| نم | `نِم` | (in some contexts) |
+| بد | `بَد` | bad |
+| بدن | `بَدَن` | body |
+| سم | `سَم` | poison |
+| سم | `سُم` | hoof |
+| خم | `خَم` | bent |
+| خم | `خُم` | jar |
+| ده | `دَه` | ten |
+| ده | `دِه` | village |
+| رد | `رَد` | trace, reject |
+| سد | `سَدّ` | dam |
+| فر | `فِر` | curl, oven |
+| فر | `فَرّ` | royal glory |
+| نخ | `نَخ` | thread |
+| نخ | `نُخ` | (in compounds) |
+| پز | `پَز` | cooking/showing-off |
+| تن | `تَن` | body / ton |
+
+**Scan rule for the preprocessor**: any single-syllable Persian word from this list — always diacritize. Pick the reading from context (if the surrounding sentence makes the meaning clear, use that vowel; if ambiguous, ask the user once).
+
+---
+
+## 1C. Clitic chains that produce phantom syllables `[Rule]`
+
+When a noun ending in a consonant takes the plural `ها` and a possessive clitic (`ت`, `ش`, etc.), the chain `noun + ‌ + ها + clitic` can confuse some engines, which insert an extra `ه` syllable.
+
+**Real failure example:**
+
+| Bare | Engine read | Correct |
+|---|---|---|
+| `قدم‌هات` | `qadame-hât` (extra `e` before `هات`) | `qadam-hât` |
+
+**Fix:** use one of these forms (in order of preference):
+
+| Form | Use when |
+|---|---|
+| `قَدَم‌هات` (diacritized) | Default — adding fatha on the noun stabilises the boundary |
+| `قدم‌های‌ت` (expanded clitic) | Formal context; more explicit |
+| `قدماتو` (contracted, spoken register) | Spoken register, when followed by `را`/`رو` |
+| `قدم‌های تو` (fully separated) | Last resort — loses the clitic relationship |
+
+**Class of words affected:**
+
+Any consonant-final noun + `‌ها` + possessive clitic:
+
+| Noun + suffix chain | Risky bare form | Safer diacritized | Safer expanded |
+|---|---|---|---|
+| قدم + ها + ت | قدم‌هات | قَدَم‌هات | قدم‌های‌ت |
+| دست + ها + ش | دست‌هاش | دَست‌هاش | دست‌های‌ش |
+| چشم + ها + م | چشم‌هام | چِشم‌هام | چشم‌های‌م |
+| حرف + ها + ت | حرف‌هات | حَرف‌هات | حرف‌های‌ت |
+| کتاب + ها + ش | کتاب‌هاش | کتاب‌هاش (no diacritic needed; 2 syllables) | کتاب‌های‌ش |
+
+The pattern: 2+ syllable nouns rarely fail. **Single-syllable nouns with cluster endings (`قَدَم`, `دَست`, `چِشم`) need diacritization** to prevent the engine from misreading the boundary.
+
+---
+
+## 1D. Ezafe on cluster-ending words — diacritize the host before the ezafe `[Rule]`
+
+When a single-syllable cluster word takes an ezafe, the ezafe gets read but the host word's internal vowel may still be guessed wrong.
+
+**Real failure:**
+
+| Bare | Engine read | Correct |
+|---|---|---|
+| `لنگه‌کفشِ` | `lange-kefeshe` (kafsh→kefesh, then ezafe) | `lange-ye kafsh-e` |
+
+**Fix:** diacritize the cluster word *before* applying the ezafe.
+
+| Pattern | Bare | Fix |
+|---|---|---|
+| `noun ezafe-cluster-word` | `صدای کفش` | `صدای کَفش` |
+| `cluster-word ezafe-something` | `کفشِ کوچک` | `کَفشِ کوچک` |
+| `compound noun with cluster` | `لنگه‌کفش` | `لنگه‌کَفش` |
+
+Always: **diacritize first, then mark ezafe.** Order matters — if ezafe is added first, the LLM/engine may not return to fix the cluster reading.
+
 ---
 
 ## 1. واو معدوله (silent `و`) — the `خوا-` family

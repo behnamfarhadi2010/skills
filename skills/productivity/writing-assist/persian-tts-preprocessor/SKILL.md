@@ -11,7 +11,7 @@ author:
   url: https://nimaaksoy.com
   github: nimaaksoy
 license: CC-BY-4.0
-version: 0.1.0
+version: 0.2.0
 created: 2026-05-17
 updated: 2026-05-17
 ---
@@ -163,21 +163,113 @@ The ezafe (`ـِ`) is the unstressed `-e` that links noun phrases: `کتابِ �
 
 See `resources/ezafe.md` for the full decision tree and edge cases.
 
-### Step 6 — Exception lexicon `[Rule]`
+### Step 6 — Exception lexicon — scan and diacritize aggressively `[Rule]`
 
-A small list of words where the standard letter-to-sound mapping fails. These are not rules — they're memorised exceptions.
+This is the step that catches "obviously wrong" TTS readings. **Do not treat this as optional.** Scan every word in the text against the four classes below and apply the fix every time the pattern matches.
 
-| Pattern | Class | Correct reading |
+The previous version of this skill was too conservative here — it deferred to "engine usually handles it" and let through known-bad cases like `کفش → kefesh` and `چتر → chetre`. The correct posture is: **if a word is in the lexicon, always diacritize, even in Preserve register.**
+
+#### 6.1 — Closed consonant-cluster monosyllables (CVCC, CVCC...)
+
+Single-syllable Persian words with a final consonant cluster. The engine inserts a phantom vowel mid-cluster because Persian doesn't write short vowels. **Always add the explicit short vowel.**
+
+| Bare | Diacritized | Reading |
 |---|---|---|
-| `خوا` (`خواهر`, `خواب`, `خواندن`, `خواستن`, `خواهان`, `خواهش`, `خواب‌آلود`...) | واو معدوله — silent `و` | `khâhar`, `khâb`, `khândan`, `khâstan` |
-| `الله` | religious | `allâh` |
-| `صلوة` / `زکوة` (rare) | historical | engine-specific |
-| Common foreign loans (`کامپیوتر`, `تلویزیون`, `اینترنت`) | retain phonetic | usually safe |
-| Proper-name patterns: short single-vowel names (`نازلی`, `سارا`, `لیلا`, `ندا`) | phantom-ezafe risk | wrap in `« »` quotes or use possessive form (`نازلیِ من`) to lock |
+| کفش | `کَفش` | kafsh |
+| چتر | `چَتر` | chatr |
+| قبر | `قَبر` | qabr |
+| قفل | `قُفل` | qofl |
+| شکل | `شِکل` | shekl |
+| مشت | `مُشت` | mosht |
+| دست | `دَست` | dast |
+| تخت | `تَخت` | takht |
+| سخت | `سَخت` | sakht |
+| نفس | `نَفَس` | nafas |
+| فکر | `فِکر` | fekr |
+| ذکر | `ذِکر` | zekr |
+| صبر | `صَبر` | sabr |
+| لطف | `لُطف` | lotf |
+| عشق | `عِشق` | eshq |
+| قلب | `قَلب` | qalb |
+| قدر | `قَدر` | qadr |
+| پست | `پُست` | post |
+| نطق | `نُطق` | notq |
+| شخص | `شَخص` | shakhs |
+| نبض | `نَبض` | nabz |
+| خشک | `خُشک` | khoshk |
+| پخش | `پَخش` | pakhsh |
 
-The skill should NOT try to fix every possible Persian historical spelling. Only the `خوا-` family is high-frequency enough to handle proactively. Everything else, leave alone — the engine usually handles it.
+See `resources/exception-lexicon.md` §1A for the full list (~50+ entries). **When in doubt, mark it.** Over-diacritising a single-syllable word is harmless; under-marking is the failure mode.
 
-See `resources/exception-lexicon.md` for the extended list.
+#### 6.2 — Ambiguous short-vowel monosyllables
+
+Words where the short vowel determines the meaning. Always diacritize based on context.
+
+| Word | When meaning … | Mark as |
+|---|---|---|
+| شن | sand | `شِن` |
+| لنگ | leg / pair | `لِنگ` |
+| لنگ | lame | `لَنگ` |
+| سر | head | `سَر` |
+| سر | secret | `سِرّ` |
+| مرد | man | `مَرد` |
+| مرد | died | `مُرد` |
+| کرم | worm | `کِرم` |
+| کرم | cream | `کِرِم` |
+| کرم | generosity | `کَرَم` |
+| شکر | sugar | `شِکَر` |
+| شکر | thanks | `شُکر` |
+| پر | feather | `پَر` |
+| پر | full | `پُر` |
+| ده | ten | `دَه` |
+| ده | village | `دِه` |
+| سم | poison | `سَم` |
+| سم | hoof | `سُم` |
+
+See `resources/exception-lexicon.md` §1B for the extended list. **Always diacritize words from this class** — engine guesses are roughly 50/50 and frequently wrong.
+
+#### 6.3 — Clitic chains: `noun + ‌ها + clitic` on cluster nouns
+
+When a consonant-final cluster noun takes `‌ها` + a possessive clitic (`ت`, `ش`, `م`), some engines insert a phantom `ه`.
+
+**Real failure:** `قدم‌هات` read as `qadame-hât` (extra `e`).
+
+**Fix:** diacritize the host noun *before* the clitic chain.
+
+| Bare | Diacritized fix |
+|---|---|
+| قدم‌هات | `قَدَم‌هات` |
+| دست‌هاش | `دَست‌هاش` |
+| چشم‌هام | `چِشم‌هام` |
+| حرف‌هات | `حَرف‌هات` |
+
+Multi-syllable nouns rarely fail (`کتاب‌هاش` is usually correct). The single-syllable cluster nouns are the high-risk class.
+
+#### 6.4 — واو معدوله and other historical exceptions
+
+Words written with `خوا` where the `و` is silent — handle by lexicon (the spelling can't be fixed in plain text, so flag for the user or use phonetic notation if the engine supports it):
+
+| Pattern | Examples | Reading |
+|---|---|---|
+| `خوا-` family | `خواهر`, `خواب`, `خواندن`, `خواستن`, `خواهان`, `خواهش` | `khâ-` (silent `و`) |
+| Religious phrases | `الله`, `الرحمن`, `الرحیم` | preserve as-is |
+| Foreign loans | `کامپیوتر`, `تلویزیون`, `اینترنت` | usually safe — leave alone |
+| Proper names with phantom-ezafe risk | `نازلی`, `سارا`, `لیلا`, `ندا`, `رضا` | wrap in `« »` or use possessive form |
+
+See `resources/exception-lexicon.md` §1, §2, §3, §4 for the full lists.
+
+#### 6.5 — Scan procedure (do this for every text)
+
+Walk through the text and check every word against this priority:
+
+1. **Is it a single-syllable cluster word?** (sections 6.1 above + exception-lexicon §1A) → diacritize.
+2. **Is it an ambiguous short-vowel monosyllable?** (6.2 + §1B) → diacritize based on context.
+3. **Is it a clitic chain on a cluster noun?** (6.3 + §1C) → diacritize the host.
+4. **Is it in the `خوا-` family?** (6.4 + §1) → flag for the user (cannot fix in plain text without lexicon support).
+5. **Is it a religious phrase or foreign loan?** (6.4 + §2, §3) → leave alone.
+6. **Is it a phantom-ezafe-risk proper name?** (6.4 + §4) → wrap in `« »` or use possessive form.
+
+The biggest leak in v0.1 was skipping steps 1–3 because they looked like "ordinary words". They're not. They are the most common failure class in Persian TTS. **Always scan, always diacritize.**
 
 ### Step 7 — Spoken-style rewrite `[Register-dependent]`
 
@@ -346,7 +438,41 @@ See `resources/engine-adapters.md` for the full per-engine notes.
 
 MMS strips punctuation, so the text is delivered as two separate synthesis calls with explicit silence between.
 
-### Example 5 — when to refuse a change
+### Example 5 — diacritising single-syllable cluster words (the v0.2 fix)
+
+These are the exact failures reported on v0.1 of the skill. Each was a "ordinary-looking" word that the engine mispronounced because the short vowel was implicit. v0.2 catches them via the lexicon scan in Step 6.
+
+| Input | What v0.1 produced (bad) | What v0.2 should produce (good) | What the engine then reads |
+|---|---|---|---|
+| `لنگه‌کفش` | `لنگه‌کفش` (no fix) — engine read `lange-kefesh` | `لنگه‌کَفش` | `lange-kafsh` ✓ |
+| `چتر خریدی` | `چتر خریدی` (no fix) — engine read `chetre kharidi` | `چَتر خریدی` | `chatr kharidi` ✓ |
+| `شن نشست` | `شن نشست` (no fix) — engine read `shan neshast` | `شِن نشست` | `shen neshast` ✓ |
+| `لنگه‌م` | `لنگه‌م` (no fix) — engine read `lang-am` | `لِنگه‌م` | `leng-am` ✓ |
+| `قدم‌هات` | `قدم‌هات` (no fix) — engine read `qadame-hât` | `قَدَم‌هات` | `qadam-hât` ✓ |
+
+The v0.2 instruction: **scan every word against `resources/exception-lexicon.md` §1A, §1B, §1C, §1D before delivery**. If a word matches a pattern, diacritize it. Don't second-guess; over-marking is harmless.
+
+**Worked example** — Input:
+
+```
+من حافظِ قدم‌هات هستم. لنگه‌کفش رو پیدا کردم. چتر خریدی؟ شن نشست رو پاکم.
+```
+
+**Output (Preserve + Step 6 applied):**
+
+```
+من حافظِ قَدَم‌هات هستم. لنگه‌کَفش رو پیدا کردم. چَتر خریدی؟ شِن نشست رو پاکم.
+```
+
+**Changes per word:**
+- `قدم‌هات` → `قَدَم‌هات` (cluster noun + clitic — §1C)
+- `لنگه‌کفش` → `لنگه‌کَفش` (cluster word inside a compound — §1D)
+- `چتر` → `چَتر` (CVCC cluster — §1A)
+- `شن` → `شِن` (ambiguous short vowel — §1B; meaning "sand" from context)
+
+Nothing else in the text changes. The structure, the formal register, the other words — all preserved.
+
+### Example 6 — when to refuse a change
 
 **Input:**
 
@@ -386,6 +512,8 @@ MMS strips punctuation, so the text is delivered as two separate synthesis calls
 - **Persian TTS is front-end-limited, not model-limited.** The preprocessor matters more than the engine choice. Even a great model produces stiff output on raw text; a moderate model produces natural output on preprocessed text.
 - **Preserve mode is the default.** Don't aggressively rewrite to Spoken unless the user explicitly asks. Rewriting formal text into colloquial form can break tone (academic, legal, literary, religious).
 - **Ezafe marking is selective, not global.** Marking every possible ezafe makes the output read like a school textbook. Only mark where the engine is likely to drop it.
+- **But short-vowel diacritization on cluster monosyllables is NOT selective — always mark.** Single-syllable Persian words with closed consonant clusters (`کفش`, `چتر`, `قفل`, `شکل`, …) and ambiguous-short-vowel monosyllables (`شن`, `لنگ`, `سر`, …) must be diacritized every time. Skipping these is the #1 source of "obvious" TTS mispronunciation. See Step 6.1–6.3 and `resources/exception-lexicon.md` §1A–§1D.
+- **"Selective" applies to Ezafe, not to the exception lexicon.** v0.1 of this skill conflated the two — the LLM read "selective diacritization" as a global posture and let through known-bad cluster words. v0.2 corrects the framing: Ezafe is selective; lexicon entries are always applied.
 - **Engine support for Persian varies wildly.** Azure has two voices but no custom lexicon. MMS strips punctuation. XTTS-v2 doesn't officially support Persian. ElevenLabs and Google Gemini-TTS are currently the safer English-speaker-friendly defaults for high-quality Persian; specialised Persian-trained models (ManaTTS, ParsVoice fine-tunes) are stronger for native quality but require infrastructure. See `resources/engine-adapters.md`.
 - **Some Persian sounds remain AI-hard even with clean text.** `ع`, `ح`, `ق`, `ء` are inconsistently rendered. Proper names ending in `-li`, `-ra`, `-ma` (نازلی, سارا, نیما) often get a phantom ezafe inserted (`nâz-LI` → `nâz-EH-li`). The skill flags these but the engine may still mispronounce. Re-roll 2–3 times and pick.
 - **Regional dialects (Khorasani, Lori, Kurdish, Bandari) are out of scope.** Default register is Tehran-standard Persian (`fa-IR` معیار). If the user wants regional flavour, write the معیار form and use post-processing in the audio.
@@ -394,4 +522,5 @@ MMS strips punctuation, so the text is delivered as two separate synthesis calls
 
 ## Changelog
 
+- `0.2.0` — major fix to Step 6 (exception lexicon) after live testing revealed the v0.1 was too conservative and let through known-bad cases like `کفش → kefesh`, `چتر → chetre`, `شن → shan`, `لنگ → lang`, and clitic chains like `قدم‌هات → qadame-hât`. The root cause: v0.1's exception lexicon was scoped to the `خوا-` family + proper names, and the LLM interpreted "selective diacritization" in Step 5 as "minimise diacritics". v0.2 expands the lexicon into four new sub-sections (§1A closed consonant-cluster monosyllables, §1B ambiguous short-vowel monosyllables, §1C clitic chains on cluster nouns, §1D Ezafe on cluster words) covering ~80+ high-frequency words, and rewrites Step 6 as a mandatory scan-and-diacritize procedure (`[Rule]`, not heuristic) that applies in every register including Preserve. Added a new Example 5 walking through the exact failures the user reported. Step 6 now has an explicit 6-priority scan procedure; over-marking is harmless, under-marking is the failure mode.
 - `0.1.0` — initial version. Distilled from a comprehensive research brief on Persian TTS preprocessing covering phonetic basics, normalisation, half-space restoration, punctuation repair, Ezafe marking, exception lexicon, spoken-style rewrite, engine-specific adapters, and a 12-slice evaluation framework.
