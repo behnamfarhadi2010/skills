@@ -11,7 +11,7 @@ author:
   url: https://nimaaksoy.com
   github: nimaaksoy
 license: CC-BY-4.0
-version: 0.1.0
+version: 0.2.0
 created: 2026-05-17
 updated: 2026-05-17
 ---
@@ -39,9 +39,31 @@ Do **not** use when:
 - The user wants a non-Amazon platform (IngramSpark, Draft2Digital, Smashwords) — KDP-specific rules don't transfer cleanly.
 - The user wants academic, textbook, or magazine publishing — different workflows.
 
+## How to read this skill — tag legend
+
+Throughout the skill and resources, guidance is tagged so you can tell platform rules from author judgment:
+
+- `[Rule]` — official KDP requirement; non-negotiable.
+- `[Default]` — sensible starting point most users should follow.
+- `[Heuristic]` — author judgment from patterns, not platform rules.
+- `[Volatile]` — likely to change; verify in `resources/source-map.md` against the live KDP page before locking.
+
+Untagged statements should be read as `[Default]` unless context says otherwise.
+
 ## Instructions
 
 KDP success is a production line, not a single decision. Work in this order; each step gates the next.
+
+### Step 0 — Intake + scope contract (do this before anything else)
+
+Before opening any other resource, complete two preflight steps:
+
+1. **Run the 9-question intake** in `resources/intake.md`. Three answers gate everything: book type, format scope, process stage. Without these, output is guesswork.
+2. **Read the relevant tier** in `resources/output-contract.md`. Pick Tier 1 (one artefact), Tier 2 (launch package), or Tier 3 (end-to-end). Each tier has its own completion criteria.
+
+If the book type is anything other than standard fiction or nonfiction (children's, low-content, cookbook, comic, fixed-layout, multilingual/RTL, box set, public-domain), also read `resources/special-cases.md` — the standard workflow only partially applies.
+
+If the user has reported a KDP rejection or platform issue, skip to `resources/troubleshooting.md` first — the workflow steps below assume things are working.
 
 ### Step 1 — Validate the niche before writing the book
 
@@ -265,14 +287,27 @@ If none of those, paste the rejection email — KDP's wording usually names the 
 
 ## Resources
 
+### Workflow gates (run these first)
+
+- `resources/intake.md` — 9-question intake + decision tree. Do this **before** the workflow. Three answers gate everything: book type, format scope, process stage.
+- `resources/output-contract.md` — completion criteria per scope tier (one artefact / launch package / end-to-end). Defines what "done" means and what must be in the final delivery.
+- `resources/special-cases.md` — when the standard workflow doesn't apply: children's books, low-content, cookbooks, textbooks, comics, fixed-layout EPUB, multilingual/RTL, box sets, public-domain reprints, new edition vs separate ASIN. Read this before applying the rest of the skill to a non-standard book.
+
+### Reference (workflow execution)
+
 - `resources/technical-specs.md` — full spec tables for Kindle / paperback / hardcover: file formats, trim sizes, bleed rules, margin minimums by page count, font sizes, image DPI, color profiles, file size limits.
 - `resources/metadata.md` — title/subtitle rules, description HTML scaffold + forbidden content, keyword strategy, category selection, ISBN & imprint decision, BISAC vs Amazon categories.
 - `resources/pricing.md` — Kindle 35%/70% rules and territories, paperback/hardcover 50%/60% threshold, printing cost formulas, royalty scenarios, KDP calculator pointer.
 - `resources/market-research.md` — the niche validation loop, competitive analysis template, 10-point niche scorecard.
 - `resources/writing-and-editing.md` — fiction outline template, nonfiction outline template, editing ladder, where to spend a tight budget.
 - `resources/launch-ads-reviews.md` — Amazon Ads starter stack (Sponsored Products auto + manual + product targeting), review compliance rules, external marketing principles, metrics to watch.
-- `resources/sample-assets.md` — sample fiction metadata (cosy mystery), sample nonfiction metadata (founder productivity), sample HTML descriptions, sample keyword sets.
-- `resources/checklist.md` — pre-launch publishing checklist (market fit / manuscript / files / metadata / rights / pricing / launch assets / proof / post-launch dashboard).
+- `resources/sample-assets.md` — six full sample metadata sets (cosy mystery, founder productivity, postgres how-to, small-town romance, memoir, children's picture book) with HTML descriptions.
+- `resources/checklist.md` — pre-launch publishing checklist (market fit / manuscript / files / metadata / rights / pricing / launch assets / proof / post-launch dashboard) with 5 hard "do NOT publish" gates.
+
+### Diagnosis and source tracing
+
+- `resources/troubleshooting.md` — issue → likely cause → exact fix. Covers cover rejection, interior rejection, metadata rejection, detail-page split, Kindle TOC, royalty discrepancies, ads diagnostics, reviews.
+- `resources/source-map.md` — official KDP URL for every topic in the skill, what's volatile, last-verified date (2026-05-17), and the 8-field "recheck before publishing" list. **Use this whenever a numeric or rule-based claim drives a real decision.**
 
 ## Notes & limitations
 
@@ -286,4 +321,5 @@ If none of those, paste the rejection email — KDP's wording usually names the 
 
 ## Changelog
 
+- `0.2.0` — hardened the skill into a production-grade tool. Added five resource files: `intake.md` (9-question scope contract with decision tree), `output-contract.md` (per-tier completion criteria — what "done" means), `special-cases.md` (children's, low-content, cookbooks, comics, fixed-layout, multilingual/RTL, public-domain, new-edition rules), `troubleshooting.md` (issue → cause → fix for cover/interior/metadata rejections, detail-page splits, Kindle TOC, royalty discrepancies, ad diagnostics, reviews), `source-map.md` (live KDP URL per topic + last-verified date + 8-field "recheck before publishing" list). Added `[Rule]`/`[Default]`/`[Heuristic]`/`[Volatile]` tag legend to SKILL.md so volatile guidance can be distinguished from platform rules. Added Step 0 — intake + scope contract — as the mandatory preflight before any workflow steps. No changes to the existing eight resource files' content.
 - `0.1.0` — initial version. Distilled from a comprehensive KDP research brief covering technical specs, metadata, pricing, workflow, market research, writing craft, launch, ads, reviews, legal basics, and sample assets. Eight resource files cover the depth; SKILL.md is the 11-step workflow.
