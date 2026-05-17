@@ -11,9 +11,9 @@ author:
   url: https://nimaaksoy.com
   github: nimaaksoy
 license: CC-BY-4.0
-version: 1.0.0
+version: 1.1.0
 created: 2026-05-16
-updated: 2026-05-16
+updated: 2026-05-17
 ---
 
 # Persian Suno Lyrics
@@ -97,6 +97,13 @@ Match the named style to its prosody contract in `resources/styles.md`. Lock reg
 
 Now write the lyric. The Step 0 line is the chorus spine. The Step 1 persona speaks every line. The Step 2 angle is felt, even when not stated. The Step 3 study informs phrasing and shape.
 
+Use Suno's lyric syntax tools where they serve the song — see `resources/suno-lyric-syntax.md`:
+
+- **`( )` for backing vocals / call-and-response** — `این صدا (تو رو میخواد)` lets the lead sing the first half and a backing voice answer.
+- **Pipe `|` to stack production cues** inside one bracket — `[Chorus | belted hook | stacked harmonies]`, 2–4 modifiers max.
+- **Specialty meta-tags** — `[crescendo]`, `[half-time breakdown]`, `[ad-lib]`, `[modulation: ascending]`, `[chant-loop]`, etc. Pick when they earn their place; don't pile them on.
+- **Chorus escalation** — when the chorus repeats, escalate the brackets (first standard, middle stacked, final gang-vocal + bigger drums). Same lyric, growing production. Stops the song from going flat.
+
 Forbidden while drafting:
 
 - **Persian song clichés** — see `resources/persian-cliches.md`. These phrases are so overused they read as filler now: «چراغ خونه روشنه», «صدای تو», «ردِّ پای تو», «کوچه‌های خیس», «شب تاریک», «قلب شکسته». Maximum one cliché phrase per song, and only if anchored to a specific image.
@@ -113,7 +120,12 @@ After drafting, read each line aloud and fix:
 - **Visual-only rhymes** — «خوب / گم» look paired, don't rhyme. Always rhyme by ear.
 - **Wrong-syllable stress** — for every chorus word, confirm the stressed syllable lands on the strong beat.
 
-See `resources/pronunciation.md` for syllable weights, vowel safety, stress rules, melisma policy.
+See `resources/pronunciation.md` for syllable weights, vowel safety, stress rules, melisma policy, and performance typography (CAPS, em dash, ellipsis, hyphenated flow).
+
+Two structural levers in `resources/ai-singer-rules.md` also belong here:
+
+- **Drop / transition engineering** — if your song has a `[Drop]`, `[Build]`, or `[Breakdown]`, the section before it must be structurally disrupted on its final line. Otherwise the drop tag is ignored.
+- **The blank-line technique** — an extra blank line *inside* a section creates a longer pause for instrumental fill or vocal reset. Use sparingly; it has a real sonic effect.
 
 ### Step 7 — Red team your own draft
 
@@ -141,6 +153,17 @@ The examples in v0.1.0 of this skill were mediocre — they passed every technic
 
 For real examples of what brilliant Persian lyric-writing looks like, see `resources/study-guide.md` — a curated list of specific songs by Namjoo, Shamlou (as lyricist), Hafez Moghadam, Ardalan Sarfaraz, Shahyar Ghanbari, and others, with notes on the *technique* that makes each one work. Listen to those, not to me.
 
+## Resources
+
+- `resources/styles.md` — per-style prosody contract: line length, syllable density, melisma policy, consonant-cluster tolerance, register default.
+- `resources/pronunciation.md` — Persian stress, vowels, syllables, ezafe, clitics, hard sounds, melisma-safe vs unsafe words, **performance typography** (CAPS / em dash / ellipsis / hyphenated flow).
+- `resources/ai-singer-rules.md` — Suno-specific cleanup: orthography, register lock, hard-cluster handling, hook engineering, **drop / transition engineering**, **blank-line technique**.
+- `resources/suno-lyric-syntax.md` — Suno's lyric syntax: bracket vs parenthesis (`[ ]` vs `( )`), pipe `|` stacking, specialty meta-tags (`[crescendo]`, `[half-time breakdown]`, `[ad-lib]`, `[modulation]`, `[chant-loop]`, etc.), chorus escalation across repeats.
+- `resources/persian-cliches.md` — chorus-line clichés, image pairs, filler words, verb pairings to avoid. Max 1 cliché per song, with anchoring rule.
+- `resources/templates-by-style.md` — starter line patterns per major style.
+- `resources/study-guide.md` — real Persian lyric craft, by artist, with technique notes.
+- `resources/checklist.md` — pre-delivery checklist; run before sending the lyric back.
+
 ## Notes & limitations
 
 - **Writing a truly good Persian lyric is hard.** No skill makes it easy. If the brief is thin and the angle isn't there, the result will be thin no matter how clean the prosody.
@@ -152,5 +175,6 @@ For real examples of what brilliant Persian lyric-writing looks like, see `resou
 
 ## Changelog
 
+- `1.1.0` — pulled four high-value and three medium-value items from the *Suno Prompt Engineer* skill, scoped to lyric mechanics (nothing in Style / Exclude territory, which stays with *Suno Persian Songwriter*). New resource `resources/suno-lyric-syntax.md` covering: bracket vs parenthesis distinction (`[ ]` instructions vs `( )` backing vocals); pipe `|` stacking inside brackets; ~20 specialty meta-tags curated for Persian songs (crescendo, half-time breakdown, modulation, ad-lib, call-and-response, gated reverb, etc.); chorus-escalation pattern across repeats (same lyric, growing brackets). Added performance typography (CAPS, em dash, hyphenated flow) to `pronunciation.md`. Added drop-engineering and blank-line technique to `ai-singer-rules.md`. Added a proper `## Resources` section to SKILL.md. Step 5 (Draft) and Step 6 (Mouth) updated to reference the new tools. No change to the v1.0 spine (Concept → Persona → Angle → Artist Study → Red Team).
 - `1.0.0` — full rewrite. Concept-first instructions: One Line gate (Step 0), Persona (Step 1), Angle (Step 2), Artist study (Step 3) before any drafting. Added Red Team pass (Step 7) for self-critique before delivery. Removed the mediocre examples — replaced with a study-guide pointer to real brilliant Persian lyrics. New resources: `persian-cliches.md` and `study-guide.md`. Honesty added to Notes: when concept is weak, ask one focused question rather than ship average.
 - `0.1.0` — initial version: pronunciation-first, eight-step instructions, three blocks of output.

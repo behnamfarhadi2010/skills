@@ -159,7 +159,57 @@ This is trial-and-error per checkpoint. Document what works in the *Performance 
 
 ---
 
-## 10. Quick AI-singer cleanup checklist
+## 10. Drop and transition engineering
+
+A `[Drop]`, `[Build]`, or `[Breakdown]` tag is often ignored when the section before it is too tidy. Even, balanced structure resists transition; Suno reads it as "keep going" rather than "switch".
+
+To make a drop land, **disrupt the structure on the final line(s)** of the section before the tag:
+
+- Add an extra line that breaks the established rhyme scheme.
+- Switch the stress pattern at the end — if the section used masculine endings throughout, make the final line feminine (or vice versa).
+- Use a noticeably shorter or longer final line.
+- Break the punctuation pattern — if every line ended with a comma, end the last with a hard period.
+
+### Example — Persian verse engineered for a drop
+
+```
+[Verse]
+از این کوچه که می‌گذرم،
+صدای تو هنوز اینجاست،
+چراغ خونه روشنه،
+پنجره رو به سمت ماست.
+ولی نیستی.
+[Drop]
+[Chorus | anthemic | full band | bass drop]
+…
+```
+
+The first four lines are AABB with feminine-ish endings and matched syllable counts. The fifth line breaks all three (much shorter, stressed ending, no rhyme). That disruption gives Suno the structural cue to support the `[Drop]`. Without it, the drop tag is often ignored.
+
+---
+
+## 11. The blank-line technique
+
+An **extra blank line within a section** creates a longer pause — instrumental fill, vocal reset, or dramatic suspense. This is one of the strongest performance controls in Suno and it doesn't require any bracket.
+
+```
+[Bridge]
+شاید برنگردی، می‌دونم
+
+این چراغ، دیگه برای تو نیست
+```
+
+The blank line between «می‌دونم» and «این چراغ» tells Suno to hold a beat before continuing. Use it sparingly:
+
+- A moment for the singer to "catch breath"
+- A spot for a brief instrumental fill
+- A dramatic pause before a key line (often the bridge's emotional pivot)
+
+**Do not use blank lines casually for visual spacing.** They have a sonic effect, so they must be earned.
+
+---
+
+## 12. Quick AI-singer cleanup checklist
 
 Run after drafting:
 

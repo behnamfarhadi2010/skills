@@ -126,6 +126,28 @@ Build chorus end-rhymes from **open or sonorant-final** syllables when possible.
 
 ---
 
+## Performance typography (Persian-script lyric block)
+
+These typographic conventions modify how Suno performs specific words. Use in the Persian-script lyric only; the ابجد / Latin block uses CAPITAL stress marking and `~` instead.
+
+| Convention                  | Effect                              | Example                                       |
+|-----------------------------|-------------------------------------|------------------------------------------------|
+| Stretched vowel (`خووووب`) | Held / stretched note               | `بمووون` for a sustained بمون                  |
+| `...`                       | Pause, hesitation, slowdown          | `صدای تو... هنوز`                              |
+| Em dash `—`                 | Longer pause than a comma            | `رفتی — برنگشتی`                              |
+| `!` after a single word     | Belted / shouted accent              | `بمون!` at the end of a chorus line            |
+| ALL CAPS (in transliteration) | Emphasis / shouted delivery        | In ابجد: `bi-Â!` for a belted *بیا*           |
+| Hyphenated word (`d-a-r-d`) | Sung as one continuous flowing word | Use for vocal flourish on a single syllable    |
+
+Rules:
+
+- **Stretched vowels** only on open vowels (ا، و، ی). Max 3 repeats in pop/rap, up to 6 in cinematic/ballad. Never inside a consonant cluster.
+- **`!`** sparingly — one per section. `!!!` may produce shouted/distorted output.
+- **ALL CAPS** doesn't apply to Persian script (no case). Use it only in the ابجد transliteration block when marking stress or emphasis.
+- **Hyphenated word** trick works on single Latin words in inline cues; for Persian script, achieve the same effect by removing the half-space (`خنده‌دار` → `خندهدار` reads as one token).
+
+---
+
 ## Quick reference: melisma-safe vs melisma-unsafe
 
 **Melisma-safe** (OK to hold for 2+ beats): جان، ای، آرام، یار، می، تو، بیا، نیا، نگاه، چرا، رها.
