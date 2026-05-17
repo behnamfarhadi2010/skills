@@ -11,7 +11,7 @@ author:
   url: https://nimaaksoy.com
   github: nimaaksoy
 license: CC-BY-4.0
-version: 0.2.0
+version: 0.3.0
 created: 2026-05-17
 updated: 2026-05-17
 ---
@@ -258,18 +258,68 @@ Words written with `خوا` where the `و` is silent — handle by lexicon (the 
 
 See `resources/exception-lexicon.md` §1, §2, §3, §4 for the full lists.
 
-#### 6.5 — Scan procedure (do this for every text)
+#### 6.5 — Context-dependent homographs `[Rule]`
 
-Walk through the text and check every word against this priority:
+Words spelled normally but meaning different things depending on the short vowel. The engine picks the most-frequent reading; the user's intended reading is often the less-frequent one.
 
-1. **Is it a single-syllable cluster word?** (sections 6.1 above + exception-lexicon §1A) → diacritize.
-2. **Is it an ambiguous short-vowel monosyllable?** (6.2 + §1B) → diacritize based on context.
-3. **Is it a clitic chain on a cluster noun?** (6.3 + §1C) → diacritize the host.
-4. **Is it in the `خوا-` family?** (6.4 + §1) → flag for the user (cannot fix in plain text without lexicon support).
-5. **Is it a religious phrase or foreign loan?** (6.4 + §2, §3) → leave alone.
-6. **Is it a phantom-ezafe-risk proper name?** (6.4 + §4) → wrap in `« »` or use possessive form.
+| Bare | When meaning | Mark as |
+|---|---|---|
+| دور | far | leave as `دور` (`dur`) |
+| دور | around / surrounding | `دَوْرِ` (`dor`) — e.g. `دَوْرِ چراغ` "around the lamp" |
+| دوره | era / period / course | leave as `دوره` (`dowre`) |
+| دوره | "it is far" (contracted) | rewrite as `دور است` or write `دورْه` |
+| نت | music note | `نُت` (`not`) |
+| درام | drum (music context) | `دِرام` (`derâm`) |
+| درام | drama (theatre) | leave as `درام` (`derâm` standard) |
+| بهونه | excuse (colloquial of بهانه) | `بَهونه` (`bahune`) — always |
+| رو | object marker after a vowel | `رُ` (`ro`) — e.g. `من رُ` |
+| رو | face | leave as `رو` (`ru`) |
+| حرفت | your speech (spoken) | `حرفِت` (`harfet`) |
+| حرفت | your speech (formal) | `حرفَت` (`harfat`) |
+| پر | full | `پُر` (`por`) |
+| پر | feather | `پَر` (`par`) |
+| شکر | thanks | `شُکر` (`shokr`) |
+| شکر | sugar | `شِکَر` (`shekar`) |
 
-The biggest leak in v0.1 was skipping steps 1–3 because they looked like "ordinary words". They're not. They are the most common failure class in Persian TTS. **Always scan, always diacritize.**
+See `resources/exception-lexicon.md` §1E for the full list. **For every word in the input, ask: is this a homograph? If yes, what's the meaning here? Then mark.**
+
+#### 6.6 — Foreign loans with internal consonant clusters `[Rule]`
+
+Foreign loanwords (music, tech, modern vocabulary) with 2+ consonants between vowels get a phantom vowel from the engine. Same failure as §1A but in loanwords.
+
+| Bare | Diacritized | Reading |
+|---|---|---|
+| ساکسیفون | `ساکْسیفُون` | `sâksifun` |
+| پیانو | `پِیانو` | `pyâno` |
+| ساندویچ | `ساندْویچ` | `sandvich` |
+| اسپرت | `اِسْپُورْت` | `esport` |
+| الکترونیک | `اِلِکْتْرونیک` | `elektronik` |
+
+**Often-safe** (usually correct without marking): `کامپیوتر`, `تلویزیون`, `اینترنت`, `موبایل`, `رادیو`, `سینما`, `اتوبوس`, `موسیقی`, `بانک`, `پلیس`. The dividing line: 3+ syllables usually OK; 2-syllable with internal cluster usually fails.
+
+See `resources/exception-lexicon.md` §1F.
+
+#### 6.7 — Scan procedure (do this for every word in every text)
+
+Walk every word through this 7-step check:
+
+1. **Single-syllable cluster word?** (§1A) → diacritize.
+2. **Ambiguous short-vowel monosyllable?** (§1B) → diacritize per context.
+3. **Clitic chain on cluster noun?** (§1C) → diacritize the host.
+4. **Cluster word taking ezafe?** (§1D) → diacritize the cluster, then mark ezafe.
+5. **Context-dependent homograph?** (§1E) → diacritize per meaning.
+6. **Foreign loan with internal cluster?** (§1F) → diacritize the cluster.
+7. **`خوا-` family / religious / proper-name phantom-ezafe?** (§1, §2, §3, §4) → handle per section.
+
+The v0.2 leak was that the LLM scanned §1A–§1D but not §1E–§1F. v0.3 adds those classes and the visible audit (Step 8) that forces the scan to happen on every word.
+
+#### 6.8 — Consistency rule `[Rule]`
+
+**Same word, same diacritisation, every time it appears in the text.** No exceptions.
+
+If you marked `ساکسیفون` as `ساکْسیفُون` in verse 1, every occurrence in verses 2, 3, the chorus, and the bridge must also be `ساکْسیفُون`. Inconsistent marking is *worse* than no marking — the engine produces correct reading on one line and wrong on the next, which sounds random and unprofessional.
+
+To enforce: after diacritizing, search for each diacritized word's bare form in the text and confirm zero matches remain. If a bare form survives anywhere, mark it.
 
 ### Step 7 — Spoken-style rewrite `[Register-dependent]`
 
@@ -323,7 +373,45 @@ Return the text with the **same paragraph structure, line breaks, and overall la
 | Quoted passages | Keep quote marks as-is |
 | Markdown bold/italic | Remove if asked, but flag — TTS doesn't render markdown |
 
-Add a short note at the end summarising what changed:
+After the preprocessed text, append a **mandatory Word Audit** showing the lexicon-scan decisions. This is what forces the scan to actually happen — without the visible audit, the LLM tends to mark a few obvious words and skip the rest.
+
+### Word Audit (required) `[Rule]`
+
+For every word in the text that was a candidate for the lexicon (§6.1 through §6.7), produce one row:
+
+```
+Word audit
+─────────────────────────────────────────────────────────────────
+Word (bare) | Lexicon class | Decision | Marked form | Count
+─────────────────────────────────────────────────────────────────
+کفش         | §1A cluster   | mark     | کَفش         | 2
+چتر         | §1A cluster   | mark     | چَتر         | 1
+شن          | §1B short-vowel | mark per context | شِن (sand) | 1
+لنگه‌م       | §1B short-vowel | mark per context | لِنگه‌م (pair) | 1
+قدم‌هات     | §1C clitic-chain | mark host | قَدَم‌هات   | 1
+دور         | §1E homograph | mark per context | دَوْرِ (around) | 1
+درام        | §1E homograph | mark per context (music) | دِرام | 3
+دوره        | §1E homograph | rewrite (means "is far") | دور است | 1
+نت          | §1E homograph | mark per context (music note) | نُت | 1
+بهونه       | §1E always   | mark | بَهونه | 1
+حرفت        | §1E homograph | mark per register (spoken) | حرفِت | 2
+ساکسیفون     | §1F foreign-loan cluster | mark | ساکْسیفُون | 6
+پیانو       | §1F foreign-loan cluster | mark | پِیانو | 1
+─────────────────────────────────────────────────────────────────
+Consistency check: ✓ every bare form replaced everywhere it appears
+```
+
+This is non-negotiable. The audit must include:
+- Every word that matched a lexicon class
+- The class (§1A through §1F)
+- The decision (mark / mark-per-context / rewrite / leave)
+- The marked form
+- The count (how many times it appears in the text)
+- An explicit consistency-check line at the bottom
+
+The audit is what the user reads to verify nothing was left to chance. If the audit is missing or incomplete, the work is not done.
+
+### Change summary (still include)
 
 ```
 Changes applied:
@@ -333,7 +421,7 @@ Changes applied:
 - Punctuation: <count> additions
 - Numbers/dates/symbols expanded: <count>
 - Ezafe marks added: <count>
-- Exception fixes (واو معدوله, names): <count>
+- Lexicon diacritisations: <count> (see Word Audit above)
 - Spoken rewrites: <count> (Spoken register only)
 - Structure: paragraph breaks preserved
 ```
@@ -472,7 +560,112 @@ The v0.2 instruction: **scan every word against `resources/exception-lexicon.md`
 
 Nothing else in the text changes. The structure, the formal register, the other words — all preserved.
 
-### Example 6 — when to refuse a change
+### Example 6 — full song lyric (the v0.3 fix — homographs + foreign loans + visible Word Audit)
+
+The exact failure case the user reported on v0.2: a song lyric that passed v0.2's cluster-monosyllable check but still mispronounced homographs (`دور`, `درام`, `دوره`, `نت`), foreign loans (`ساکسیفون`, `پیانو`), and inconsistent words (some occurrences fixed, others left bare).
+
+**Input (excerpt, Spoken-leaning register):**
+
+```
+[Intro | smoky jazz club | brushed drums | upright bass]
+دود می‌پیچه دورِ چراغ
+شب نشسته روی شونه‌هام
+میزِ چوبی، لیوانِ سرد
+اسمِ تو مونده روی لب‌هام
+
+[Verse 1]
+درام آرومه...
+مثلِ بارون روی شیشه
+کافه خوابه، شهر دوره
+دل هنوز از تو می‌نویسه
+
+سایه‌ات رد می‌شه از ذهنم
+مثلِ فیلمی بی‌صدا
+من به هر نت خیره می‌مونم
+تو به هر خاطره، جدا
+
+[Pre-Chorus]
+هیچ‌کس اینجا
+جایِ تو حرف نمی‌زنه
+جز ساکسیفونی که انگار
+اسمِ من رو پس می‌زنه
+
+[Chorus]
+بمون امشب
+بمون یه کم
+بذار ساکسیفون
+حرفت رو بزنه
+```
+
+**Output (preprocessed):**
+
+```
+[Intro | smoky jazz club | brushed drums | upright bass]
+دود می‌پیچه دَوْرِ چراغ
+شب نشسته روی شونه‌هام
+میزِ چوبی، لیوانِ سرد
+اسمِ تو مونده روی لب‌هام
+
+[Verse 1]
+دِرام آرومه...
+مثلِ بارون روی شیشه
+کافه خوابه، شهرْ دور است
+دل هنوز از تو می‌نویسه
+
+سایه‌ات رد می‌شه از ذهنم
+مثلِ فیلمی بی‌صدا
+من به هر نُت خیره می‌مونم
+تو به هر خاطره، جدا
+
+[Pre-Chorus]
+هیچ‌کس اینجا
+جایِ تو حرف نمی‌زنه
+جز ساکْسیفُونی که انگار
+اسمِ من رُ پس می‌زنه
+
+[Chorus]
+بمون امشب
+بمون یه کم
+بذار ساکْسیفُون
+حرفِت رو بزنه
+```
+
+**Word Audit:**
+
+```
+Word audit
+────────────────────────────────────────────────────────────────────────
+Word (bare) | Class | Decision | Marked form        | Count
+────────────────────────────────────────────────────────────────────────
+دورِ        | §1E homograph | mark per context (around)   | دَوْرِ      | 1
+درام        | §1E homograph | mark per context (drum/music) | دِرام    | 3 (verse 1, chorus, outro)
+دوره        | §1E homograph | rewrite ("is far")           | دور است   | 1
+نت          | §1E homograph | mark per context (music)    | نُت        | 1
+ساکسیفون     | §1F foreign-loan cluster | mark         | ساکْسیفُون  | 6
+ساکسیفونی    | §1F foreign-loan cluster + suffix | mark | ساکْسیفُونی | 1
+رو (object after vowel) | §1E homograph | mark    | رُ          | 1 (in `من رُ`)
+حرفت         | §1E homograph | mark per register (spoken) | حرفِت     | 2
+بهونه        | §1E always   | mark                       | بَهونه    | 1 (in outro/bridge)
+پیانو        | §1F foreign-loan cluster | mark        | پِیانو      | 1 (in verse 2)
+کفش (in لنگه‌کفش) | §1A cluster | mark inside compound | لنگه‌کَفش | (only if appears)
+چتر          | §1A cluster   | mark                       | چَتر       | (only if appears)
+شن           | §1B short-vowel | mark per context (sand) | شِن        | (only if appears)
+قدم‌هات      | §1C clitic-chain | mark host              | قَدَم‌هات | (if appears)
+────────────────────────────────────────────────────────────────────────
+Consistency check: ✓ every occurrence of ساکسیفون marked as ساکْسیفُون;
+                  ✓ every occurrence of درام marked as دِرام;
+                  ✓ every occurrence of حرفت marked as حرفِت
+```
+
+**Performance notes:**
+
+- Register: Spoken-leaning (song lyric, conversational tone).
+- Music-context homographs (`درام`, `نت`, `ساکسیفون`) all resolved to music readings.
+- `دور` resolved as "around" (Intro) and rewritten as "دور است" when meaning "is far" (verse 1) — different word, different fix.
+- `پیانو` consistently marked across all verses.
+- Section tags preserved exactly. Line breaks preserved.
+
+### Example 7 — when to refuse a change
 
 **Input:**
 
@@ -514,6 +707,10 @@ Nothing else in the text changes. The structure, the formal register, the other 
 - **Ezafe marking is selective, not global.** Marking every possible ezafe makes the output read like a school textbook. Only mark where the engine is likely to drop it.
 - **But short-vowel diacritization on cluster monosyllables is NOT selective — always mark.** Single-syllable Persian words with closed consonant clusters (`کفش`, `چتر`, `قفل`, `شکل`, …) and ambiguous-short-vowel monosyllables (`شن`, `لنگ`, `سر`, …) must be diacritized every time. Skipping these is the #1 source of "obvious" TTS mispronunciation. See Step 6.1–6.3 and `resources/exception-lexicon.md` §1A–§1D.
 - **"Selective" applies to Ezafe, not to the exception lexicon.** v0.1 of this skill conflated the two — the LLM read "selective diacritization" as a global posture and let through known-bad cluster words. v0.2 corrects the framing: Ezafe is selective; lexicon entries are always applied.
+- **The visible Word Audit is non-negotiable.** v0.2 made the lexicon `[Rule]` but the LLM still scanned incompletely — fixing some occurrences of a word and leaving others bare. v0.3 fixes this by requiring a visible per-word audit table in the output (Step 8). If the audit is missing or incomplete, the work is not done. The forcing function is the same idea the *Persian Suno Lyrics* skill uses with its Content Brief: making the LLM *show* its scan prevents the "I marked the easy ones and skipped the rest" failure mode.
+- **Consistency is mandatory.** Same word, same diacritisation, every occurrence. The Word Audit ends with an explicit consistency-check line confirming zero bare forms of marked words remain anywhere in the text.
+- **Context-dependent homographs are the most subtle failure class.** Words like `دور`, `درام`, `دوره`, `نت`, `حرفت` are spelled normally — the failure isn't a missing diacritic on a weird word, it's the engine picking the wrong reading of a normal word. These need *contextual* diacritisation: read the sentence, pick the meaning, mark accordingly. See §6.5 and `resources/exception-lexicon.md` §1E.
+- **Foreign loanwords with internal clusters need the same treatment as native cluster monosyllables.** `ساکسیفون`, `پیانو`, `ساندویچ` — all have the same phantom-vowel-insertion failure as `کفش` or `چتر`. Mark them. See §6.6 and `resources/exception-lexicon.md` §1F.
 - **Engine support for Persian varies wildly.** Azure has two voices but no custom lexicon. MMS strips punctuation. XTTS-v2 doesn't officially support Persian. ElevenLabs and Google Gemini-TTS are currently the safer English-speaker-friendly defaults for high-quality Persian; specialised Persian-trained models (ManaTTS, ParsVoice fine-tunes) are stronger for native quality but require infrastructure. See `resources/engine-adapters.md`.
 - **Some Persian sounds remain AI-hard even with clean text.** `ع`, `ح`, `ق`, `ء` are inconsistently rendered. Proper names ending in `-li`, `-ra`, `-ma` (نازلی, سارا, نیما) often get a phantom ezafe inserted (`nâz-LI` → `nâz-EH-li`). The skill flags these but the engine may still mispronounce. Re-roll 2–3 times and pick.
 - **Regional dialects (Khorasani, Lori, Kurdish, Bandari) are out of scope.** Default register is Tehran-standard Persian (`fa-IR` معیار). If the user wants regional flavour, write the معیار form and use post-processing in the audio.
@@ -522,5 +719,6 @@ Nothing else in the text changes. The structure, the formal register, the other 
 
 ## Changelog
 
+- `0.3.0` — second round of fixes after v0.2 live testing. v0.2 added the lexicon classes but the LLM was still scanning incompletely — some occurrences of a word got diacritized, others didn't (the "leaving it to chance" problem the user flagged). v0.3 adds two new lexicon classes that v0.2 missed entirely (§1E context-dependent homographs covering `دور`/`دوره`/`نت`/`درام`/`بهونه`/`رو`/`حرفت`/`شکر`/`پر`/`سر`/`مرد`/etc., and §1F foreign loans with internal consonant clusters covering `ساکسیفون`/`پیانو`/`ساندویچ`/`اسپرت`/`الکترونیک`/etc.). More importantly, v0.3 adds a **mandatory visible Word Audit** to the output (Step 8) — a table listing every lexicon-class word, its decision, marked form, and count, with an explicit consistency-check line. This is the forcing mechanism: the LLM has to *show* the per-word scan, which makes "I'll fix some of them" impossible. Added §6.8 explicit consistency rule. Added Example 6 walking through the user's actual song lyric end-to-end with the full Word Audit. Renumbered the previous Example 6 to Example 7.
 - `0.2.0` — major fix to Step 6 (exception lexicon) after live testing revealed the v0.1 was too conservative and let through known-bad cases like `کفش → kefesh`, `چتر → chetre`, `شن → shan`, `لنگ → lang`, and clitic chains like `قدم‌هات → qadame-hât`. The root cause: v0.1's exception lexicon was scoped to the `خوا-` family + proper names, and the LLM interpreted "selective diacritization" in Step 5 as "minimise diacritics". v0.2 expands the lexicon into four new sub-sections (§1A closed consonant-cluster monosyllables, §1B ambiguous short-vowel monosyllables, §1C clitic chains on cluster nouns, §1D Ezafe on cluster words) covering ~80+ high-frequency words, and rewrites Step 6 as a mandatory scan-and-diacritize procedure (`[Rule]`, not heuristic) that applies in every register including Preserve. Added a new Example 5 walking through the exact failures the user reported. Step 6 now has an explicit 6-priority scan procedure; over-marking is harmless, under-marking is the failure mode.
 - `0.1.0` — initial version. Distilled from a comprehensive research brief on Persian TTS preprocessing covering phonetic basics, normalisation, half-space restoration, punctuation repair, Ezafe marking, exception lexicon, spoken-style rewrite, engine-specific adapters, and a 12-slice evaluation framework.

@@ -159,6 +159,99 @@ The pattern: 2+ syllable nouns rarely fail. **Single-syllable nouns with cluster
 
 ---
 
+## 1E. Context-dependent homographs — disambiguate by surrounding context `[Rule]`
+
+The biggest cause of "wrong but not obviously wrong" TTS errors. The word is spelled normally, the engine picks the most-frequent reading, the user's intended meaning is the less-frequent one. Always diacritize based on the sentence context.
+
+### Common offenders
+
+| Bare | Reading A (often default) | Reading B (often intended) | How to disambiguate |
+|---|---|---|---|
+| دور | `dur` (far) | `dor / dowr` (around, period, cycle) | When meaning "around"/"surrounding" → write `دَوْرِ` (e.g. `دَوْرِ چراغ` — around the lamp) |
+| دوره | `dowre` (period, era, course) | `dur ast` (it is far — contracted) | When meaning "it is far" → expand to `دور است` or write `دورْه` with explicit sukun; never leave bare |
+| نت | `nat` (negation particle, rare) | `not` (music note, from English) | Music context → `نُت` |
+| درام | `derâm / dirâm` (drum) | `derâm` (drama, theatre) | Music context → `دِرام`; theatre context → `دْرام` |
+| بهونه | `behune` (engine guess, wrong) | `bahune` (colloquial of بهانه — excuse) | Always → `بَهونه` |
+| رو | `ru` (face) | `ro` (object marker, suffixed to vowel-final word) | When object marker after vowel → write `رُ` (e.g. `من رُ`); when face → leave `رو` |
+| حرفت | `harfat` (formal "your speech") | `harfet` (spoken "your speech") | Spoken/colloquial context → `حرفِت`; formal context → `حرفَت` |
+| پر | `par` (feather, wing) | `por` (full) | Always diacritize: `پَر` or `پُر` based on meaning |
+| سر | `sar` (head) | `serr` (secret) | Always diacritize: `سَر` or `سِرّ` |
+| مرد | `mard` (man) | `mord` (died) | Always diacritize: `مَرد` or `مُرد` |
+| کرم | `kerm` (worm) / `kerem` (cream) / `karam` (generosity) | varies | Always diacritize per meaning |
+| شکر | `shekar` (sugar) | `shokr` (thanks) | Always diacritize: `شِکَر` or `شُکر` |
+| نشست | `neshast` (sat / sitting / session) | `nashast` (didn't sit — rare) | Usually leave as `نشست` (standard reading); rare alt needs marking |
+| دست | `dast` (hand) | `dest` (rare poetic) | `دَست` for safety |
+| می‌برد | `mi-barad` (he/she takes) | `mi-bord` (was taking, past continuous) | Add prefix `می‌` context or diacritic to disambiguate |
+| خوش | `khosh` (happy, good) | `khash` (rare) | `خُوش` |
+| خوب | `khub` (good) | — | safe |
+
+### Procedure
+
+For every Persian word in the input:
+
+1. Is the word in the homograph list above?
+2. If yes — read the surrounding sentence and pick the meaning.
+3. Write the explicit diacritic form. **Never leave a homograph un-diacritized when the lexicon flags it.**
+
+### Real failure example from production
+
+Input lyric:
+
+```
+دود می‌پیچه دورِ چراغ        ← `دور` here = "around" (dor), not "far" (dur)
+درام آرومه                  ← `درام` here = "drum" (music context), not "drama"
+کافه خوابه، شهر دوره        ← `دوره` here = "the city is far" (dur-e), not "era"
+به هر نت خیره می‌مونم        ← `نت` = "note" (music), not "negation"
+```
+
+Without disambiguation, the engine picked the wrong reading for every one of these. With disambiguation:
+
+```
+دود می‌پیچه دَوْرِ چراغ
+دِرام آرومه
+کافه خوابه، شهر دور است
+به هر نُت خیره می‌مونم
+```
+
+This class is the source of the **subtlest** failures because the reading sounds Persian and the listener doesn't realise it's wrong until they hear the meaning shift.
+
+---
+
+## 1F. Foreign loans with internal consonant clusters — diacritize the cluster `[Rule]`
+
+Foreign loanwords (especially music, technology, and modern vocabulary) often have consonant clusters that Persian doesn't natively allow. The engine inserts a phantom vowel mid-cluster — same failure mode as §1A but in loanwords.
+
+### Common loan-word failures
+
+| Bare | Wrong reading | Diacritized | Correct reading |
+|---|---|---|---|
+| ساکسیفون | `sâkesifoni` (extra `e` + ezafe) | `ساکْسیفُون` | `sâksifun` (sax-i-fun) |
+| پیانو | `piyâno` (literal Persian) | `پِیانو` | `pyâno` (closer to English) |
+| ساندویچ | `sândevich` | `ساندْویچ` | `sandvich` |
+| ترانسفر | `terâmsfer` | `ترانْسفِر` | `trânsfer` |
+| ترانزیستور | `terânzistur` | `ترانْزیستور` | `trânzistor` |
+| تکنولوژی | `teknolozhi` (usually correct) | `تِکْنُولُوژی` | `teknolozhi` |
+| الکترونیک | `elekteronik` | `اِلِکْتْرونیک` | `elektronik` |
+| اسپانیا | `espâniyâ` | `اِسْپانیا` | `espâniyâ` (usually safe) |
+| اسپرت | `esporet` | `اِسْپُورْت` | `esport` |
+| اسپریدر | `esperider` | `اِسْپْرِیدِر` | `espreyder` |
+
+### Procedure
+
+1. Identify foreign loanwords (look for spellings unusual in native Persian: consecutive consonants, English-origin spellings, sport/tech/music vocabulary).
+2. If the word has 2+ consonants between vowels, add explicit sukun (`ـْ`) on the first consonant of the cluster and explicit vowel marks on the rest.
+3. **Same word, same diacritics, every time** — don't mark `ساکْسیفُون` in one verse and leave `ساکسیفون` bare in the next. Consistency is required.
+
+### Often-safe loanwords (still verify)
+
+These usually read correctly on common engines:
+
+`کامپیوتر`, `تلویزیون`, `اینترنت`, `موبایل`, `رادیو`, `سینما`, `اتوبوس`, `موسیقی`, `پلیس`, `بانک`
+
+The dividing line is roughly: 3+ syllables = usually safe; 2-syllable with internal cluster = usually fails.
+
+---
+
 ## 1D. Ezafe on cluster-ending words — diacritize the host before the ezafe `[Rule]`
 
 When a single-syllable cluster word takes an ezafe, the ezafe gets read but the host word's internal vowel may still be guessed wrong.
