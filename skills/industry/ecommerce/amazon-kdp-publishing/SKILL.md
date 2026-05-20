@@ -11,7 +11,7 @@ author:
   url: https://nimaaksoy.com
   github: nimaaksoy
 license: CC-BY-4.0
-version: 0.2.0
+version: 0.3.0
 created: 2026-05-17
 updated: 2026-05-17
 ---
@@ -303,6 +303,7 @@ If none of those, paste the rejection email — KDP's wording usually names the 
 - `resources/launch-ads-reviews.md` — Amazon Ads starter stack (Sponsored Products auto + manual + product targeting), review compliance rules, external marketing principles, metrics to watch.
 - `resources/sample-assets.md` — six full sample metadata sets (cosy mystery, founder productivity, postgres how-to, small-town romance, memoir, children's picture book) with HTML descriptions.
 - `resources/checklist.md` — pre-launch publishing checklist (market fit / manuscript / files / metadata / rights / pricing / launch assets / proof / post-launch dashboard) with 5 hard "do NOT publish" gates.
+- `resources/production-rules.md` — six hard `[Rule]` production gates: PDF font embedding (with ReportLab specifics + grep verification), KDP cover template rule (download per final page count), barcode area handling, paperback spine-text threshold, cover bleed and safe-zone, and the final KDP preflight checklist that must pass before any "ready to upload" claim.
 
 ### Diagnosis and source tracing
 
@@ -321,5 +322,6 @@ If none of those, paste the rejection email — KDP's wording usually names the 
 
 ## Changelog
 
+- `0.3.0` — added `resources/production-rules.md` with six hard `[Rule]` production gates covering the file-generation and final-preflight stages. Closes a known gap: v0.2 had the conceptual workflow but no enforceable file-quality rules for the generation step. New rules: (1) interior PDF font embedding with ReportLab-specific guidance and grep verification commands; (2) print cover template — always built from the exact KDP template for the final trim/page-count/paper/ink/language, with the explicit dependency on interior page count being final first; (3) barcode area handling — leave clean by default, never add a white placeholder box; (4) paperback spine-text threshold — omit spine text on short books even when technically allowed; (5) cover bleed and safe-zone with the "check the glyph not the text box" rule; (6) the final 30-item preflight checklist organised by file type (interior / paperback cover / hardcover cover / Kindle cover / ebook / preview vs upload distinction). Each rule names the failure it prevents. Added cross-reference in the Resources section.
 - `0.2.0` — hardened the skill into a production-grade tool. Added five resource files: `intake.md` (9-question scope contract with decision tree), `output-contract.md` (per-tier completion criteria — what "done" means), `special-cases.md` (children's, low-content, cookbooks, comics, fixed-layout, multilingual/RTL, public-domain, new-edition rules), `troubleshooting.md` (issue → cause → fix for cover/interior/metadata rejections, detail-page splits, Kindle TOC, royalty discrepancies, ad diagnostics, reviews), `source-map.md` (live KDP URL per topic + last-verified date + 8-field "recheck before publishing" list). Added `[Rule]`/`[Default]`/`[Heuristic]`/`[Volatile]` tag legend to SKILL.md so volatile guidance can be distinguished from platform rules. Added Step 0 — intake + scope contract — as the mandatory preflight before any workflow steps. No changes to the existing eight resource files' content.
 - `0.1.0` — initial version. Distilled from a comprehensive KDP research brief covering technical specs, metadata, pricing, workflow, market research, writing craft, launch, ads, reviews, legal basics, and sample assets. Eight resource files cover the depth; SKILL.md is the 11-step workflow.
